@@ -2,12 +2,1222 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Meet My Numbers</title>
+<title>Number Sliding Puzzle</title>
 </head>
 
-<body onLoad="myInterval()" style="margin:0;background-color: #000;">
-<div id="contentholder"> 
-This is test file
-</div>
+<body style="margin:0;background-color: #000;">	   
 </body>
 </html>
+<script type="text/javascript" src="cordova.js"></script> 
+<script>
+var app = {
+    // Application Constructor
+    initialize: function() {
+        this.bindEvents();
+    },
+    // Bind Event Listeners
+    //
+    // Bind any events that are required on startup. Common events are:
+    // 'load', 'deviceready', 'offline', and 'online'.
+    bindEvents: function() {
+        document.addEventListener('deviceready', onDeviceReady, false);
+    },   
+};
+if (typeof(localStorage.highestscore) == "undefined") 
+{
+    localStorage.highestscore = 0;
+}
+for(var i=1;i<=8;i++) {
+	if (typeof(localStorage['level_'+i]) == "undefined") {
+		localStorage['level_'+i] = 0;
+	}
+}
+for(var i=1;i<=8;i++) {
+	if (typeof(localStorage['level_'+i+'time']) == "undefined") {
+		localStorage['level_'+i+'time'] = 0;
+	}
+}
+for(var i=1;i<=8;i++) {
+	if (typeof(localStorage['level_'+i+'score']) == "undefined") {
+		localStorage['level_'+i+'score'] = 0;
+	}
+}
+//alert(localStorage['level_'+1]);
+var num;
+var centerX,centerY,w,h;   
+w  = window.innerWidth;
+h = window.innerHeight;
+var myVar,Wcount=0;
+var name='';
+var canvas,ctx;
+var k;
+var caught_matrix={'x':1,'y':1,'num':0,'indexX':0,'indexY':0};
+var game={'level':1,'time':10,'null_index':4,'points':0,'squareX':(w/6),'squareY':(h/4),'square_count':4};
+var mouseclick_event;
+//var null_index;
+var matrix_num=new Array(20);
+matrix_num[0] = new Array(6);
+matrix_num[5] = new Array(6);
+//var numbers=['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'];
+
+var unlock={'1':'unlock1.jpg','2':'unlock1.jpg','3':'unlock1.jpg','4':'unlock1.jpg','5':'unlock1.jpg','6':'unlock1.jpg','7':'unlock1.jpg','8':'unlock1.jpg'};
+var playBtn={'x':(w/2.5),'y':(h/3),'width':100,'height':40};
+var helpBtn={'x':(w/2.5),'y':(h/2),'width':100,'height':40};
+var continueBtn={'x':(w/2.5),'y':(h/2.2),'width':100,'height':40};
+var restartBtn={'x':(w/2.5),'y':(h/1.6),'width':100,'height':40};
+var clockDis={'x':1,'y':100,'width':(w/5)-2,'height':20};
+var pointsDis={'x':(w/1.5),'y':(h/2),'width':140,'height':36};
+var level={'x':(w/2.8),'y':20};
+var menuBtn={'x':1,'y':1,'width':30,'height':30};
+var pauseBtn={'x':1,'y':41,'width':30,'height':30};
+var highestscore={'x':1,'y':140};
+var highesttime ={'x':1,'y':180};
+var score_tab={'x':(w/3),'y':(h/6),'width':80,'height':20};
+var UpdateTimeID,gameTimeID;
+var startXPos,startYPos,lastscore,timepoints,pause,timeoutID,current_score=0;
+pause = 0;
+var level1 = {'x':100,'y':60,'width':60,'height':60};
+var level2 = {'x':180,'y':60,'width':60,'height':60};
+var level3 = {'x':260,'y':60,'width':60,'height':60};
+var level4 = {'x':340,'y':60,'width':60,'height':60};
+var level5 = {'x':100,'y':160,'width':60,'height':60};
+var level6 = {'x':180,'y':160,'width':60,'height':60};
+var level7 = {'x':260,'y':160,'width':60,'height':60};
+var level8 = {'x':340,'y':160,'width':60,'height':60};
+//alert(numbers[7])
+function onDeviceReady() { 
+	if (!canvas) {
+        canvas = document.createElement("canvas");
+		canvas.id = "canvas";
+		document.body.appendChild(canvas);
+		canvas.width = (w-4);
+		canvas.height = (h-4);	
+		ctx = canvas.getContext("2d");
+		//game['squareX'] = w/7;
+		//game['squareY'] = (h/4)-4;
+		game['squareX'] = w/5;
+		game['squareY'] = h/4;
+		//myVar = setInterval(menu, 3000);
+		//timeoutID = setInterval(WaitFunc, 500);
+		menu();
+		//play(game['level']);
+		//TopMenu();
+    }
+}
+function WaitFunc()
+{
+	ctx.beginPath();
+	ctx.rect(Wcount*2+w/5, h/2, 20, 20);	
+	ctx.fillStyle = "green";
+	ctx.fill();
+	menu();
+	
+}
+function menu()
+{
+
+    //clearInterval(myVar);
+	//canvas=document.getElementById('canvas');
+	centerX = canvas.width / 2;
+    centerY = canvas.height / 2;
+	//ctx=canvas.getContext("2d");
+	ResetGameSession();
+	//ResetGameSession();
+	//canvas.width=screen.width/1.5;
+	//canvas.height=screen.height/1.5;
+	canvas.addEventListener('touchstart',MenuClick, false);
+	//canvas.addEventListener('touchstart',HeaderMenuClick, false);	
+	header();
+	MenuButton();
+	
+}
+function header()
+{
+	ctx.beginPath();
+	//alert(canvas.height)
+	ctx.rect(0, 0, canvas.width, canvas.height);
+	ctx.fillStyle = "rgb(0,0,0)";
+	ctx.fill();	
+	//alert(2)
+	//game['level']=1;
+	//ctx.drawImage(logo,10,10,150,51);
+	//ctx.drawImage(help,400,400,96,96);
+	//ctx.drawImage(playbtn,200,400,96,96);	
+}
+function MenuOnly()
+{
+	canvas.addEventListener('touchstart',HeaderMenuClick, false);
+	var img_menu = new Image();
+	img_menu.onload = function () {
+		ctx.drawImage(img_menu, menuBtn['x'], menuBtn['y']);
+	}
+	img_menu.src = "menu.jpg";
+	/*
+    ctx.beginPath();
+	ctx.rect(menuBtn['x'], menuBtn['y'], menuBtn['width'], menuBtn['height']);	
+	ctx.fillStyle = "green";
+	ctx.fill();
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = '#fff';
+	ctx.stroke();
+    ctx.fillStyle = '#fff';
+	ctx.font = 'italic bold 22px sans-serif';
+	//ctx.textAlign = 'center';
+	//alert(menuBtn['y'])
+	ctx.fillText("Menu",menuBtn['x']+24, menuBtn['y']+2);
+    */	
+}
+function TopMenu()
+{
+	canvas.addEventListener('touchstart',HeaderMenuClick, false);
+	canvas.addEventListener('touchstart',PauseMenuClick, false);
+	var img_play_btn = new Image();
+	var img_menu = new Image();
+	img_play_btn.onload = function () {
+		ctx.drawImage(img_play_btn, pauseBtn['x'], pauseBtn['y']);
+	}
+	img_menu.onload = function () {
+		ctx.drawImage(img_menu, menuBtn['x'], menuBtn['y']);
+	}	
+	img_menu.src = "menu.jpg";
+	
+	
+	
+	/*
+    ctx.beginPath();
+	ctx.rect(menuBtn['x'], menuBtn['y'], menuBtn['width'], menuBtn['height']);
+	ctx.rect(pauseBtn['x'], pauseBtn['y'], pauseBtn['width'], pauseBtn['height']);
+	ctx.fillStyle = "green";
+	ctx.fill();
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = '#fff';
+	ctx.stroke();
+    ctx.fillStyle = '#fff';
+	ctx.font = 'italic bold 22px sans-serif';
+	//ctx.textAlign = 'center';
+	//alert(menuBtn['y'])
+	ctx.fillText("Menu",menuBtn['x']+24, menuBtn['y']+2);
+	*/
+	if(pause == 0)
+	{
+		img_play_btn.src = "pause.jpg";
+	}
+	else
+	{
+	    img_play_btn.src = "play-btn.jpg";
+	}	
+	var minutes = Math.floor(localStorage['level_'+game['level']+'time'] / 60);
+	var seconds = localStorage['level_'+game['level']+'time'] % 60;
+	mod = '';
+	if((seconds/10)<1){
+		mod = 0;
+	}
+	ctx.beginPath();
+	ctx.fillStyle = '#fff';
+	ctx.font = 'italic bold 12px sans-serif';
+	var img_hs = new Image();
+	img_hs.onload = function () {
+		ctx.drawImage(img_hs, highestscore['x'], highestscore['y']+2);
+	}	
+	img_hs.src = "hs.jpg";
+	ctx.fillText(localStorage['level_'+game['level']+'score'],highestscore['x']+15, highestscore['y']);
+	var img_htime = new Image();
+	img_htime.onload = function () {
+		ctx.drawImage(img_htime, highesttime['x'], highesttime['y']+2);
+	}	
+	img_htime.src = "ht.jpg";
+	ctx.fillText(minutes+":"+mod+seconds,highesttime['x']+15, highesttime['y']);
+	var img_time = new Image();
+	img_time.onload = function () {
+		ctx.drawImage(img_time, clockDis['x'], clockDis['y']+2);
+	}	
+	img_time.src = "time.jpg";
+	
+}
+function MenuButton()
+{
+    var img_play = new Image();
+	var img_help = new Image();
+	img_play.onload = function () {
+		ctx.drawImage(img_play, playBtn['x'], playBtn['y']);
+	}
+	img_help.onload = function () {
+		ctx.drawImage(img_help, helpBtn['x'], helpBtn['y']);
+	}
+	img_play.src = "play.jpg";
+	img_help.src = "help.jpg";
+	/*
+	ctx.beginPath();
+	ctx.rect(playBtn['x'], playBtn['y'], playBtn['width'], playBtn['height']);
+	ctx.rect(helpBtn['x'], helpBtn['y'], helpBtn['width'], helpBtn['height']);
+	ctx.fillStyle = "green";
+	ctx.fill();
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = '#fff';
+	ctx.stroke();
+	ctx.fillStyle = '#fff';
+	ctx.font = 'italic bold 25px sans-serif';
+	ctx.textBaseline = 'top';
+	ctx.fillText("Play",playBtn['x']+24, playBtn['y']+4);
+	ctx.fillText("Help",helpBtn['x']+24, helpBtn['y']+4);
+	*/
+}
+function help()
+{
+	ResetGameSession();
+	//header();
+	canvas.addEventListener('touchstart',HeaderMenuClick, false);
+	ctx.beginPath();
+	//alert(canvas.height)
+	ctx.fillStyle = '#fff';
+	ctx.font = 'italic bold 14px sans-serif';
+	ctx.textBaseline = 'top';
+	ctx.fillText("-> Arrange the numbers in ascending order from top left.",(w/10), 40);
+	ctx.fillText("-> Each row should be started from left.",(w/10), 66);
+	ctx.fillText("-> For each numbers you get 10 points and you have 10 bonus",(w/10), 92);
+	ctx.fillText("    points for remaining each seconds.",(w/10), 114);
+	ctx.fillText("-> There are 8 levels,each level may differ by time and empty square.",(w/10), 140);
+	ctx.fillStyle = 'red';
+	ctx.font = 'italic bold 18px sans-serif';
+	ctx.fillText("Touch Control",(w/10), 170);
+	ctx.fillStyle = '#fff';
+	ctx.font = 'italic bold 14px sans-serif';
+	ctx.fillText("-> Touch on the numbers that are around the empty square",(w/10), 200);
+	ctx.fillText("    so that the number is selected by red color and touch on the empty square",(w/10), 226);
+	ctx.fillText("    to change the place of the number.",(w/10), 252);
+	
+	/*
+	ctx.beginPath();
+	ctx.rect(helphomeBtn['x'], helphomeBtn['y'], helphomeBtn['width'], helphomeBtn['height']);
+	ctx.fillStyle = "green";
+	ctx.fill();
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = '#fff';
+	ctx.stroke();
+	ctx.fillStyle = '#fff';
+	ctx.font = 'italic bold 22px sans-serif';
+	ctx.fillText("Home",helphomeBtn['x']+18, helphomeBtn['y']+6);
+	*/
+}
+function SelectLevel() {
+    canvas.removeEventListener('touchstart',MenuClick, false);
+	canvas.addEventListener('touchstart',LevelClick, false);
+	ctx.beginPath();
+	//ctx.shadowBlur=4;
+	//ctx.shadowColor="white";
+	ctx.fillStyle="black";
+	ctx.fillRect(50,20,w-100,h-40);
+	ctx.closePath();
+	var img_unlock1 = new Image();
+	var img_unlock2 = new Image();
+	var img_unlock3 = new Image();
+	var img_unlock4 = new Image();
+	var img_unlock5 = new Image();
+	var img_unlock6 = new Image();
+	var img_unlock7 = new Image();
+	var img_unlock8 = new Image();
+	var img_pos_wid = {1:100,2:180,3:260,4:340,5:100,6:180,7:260,8:340};	
+	img_unlock1.onload = function () {
+		ctx.drawImage(img_unlock1, img_pos_wid[1], 60);
+	}
+	if(localStorage['level_1'] == 1) {
+		img_unlock1.src = "img/unlock1.jpg";
+	}
+	else {
+		//img_unlock1.src = "img/lock1.jpg";
+		img_unlock1.src = "img/unlock1.jpg";
+	}
+	img_unlock2.onload = function () {
+		ctx.drawImage(img_unlock2, img_pos_wid[2], 60);
+	}
+	if(localStorage['level_2'] == 1) {
+		img_unlock2.src = "img/unlock2.jpg";
+	}
+	else {
+		img_unlock2.src = "img/lock2.jpg";
+	}
+	img_unlock3.onload = function () {
+		ctx.drawImage(img_unlock3, img_pos_wid[3], 60);
+	}
+	if(localStorage['level_3'] == 1) {
+		img_unlock3.src = "img/unlock3.jpg";
+	}
+	else {
+		img_unlock3.src = "img/lock3.jpg";
+	}
+	img_unlock4.onload = function () {
+		ctx.drawImage(img_unlock4, img_pos_wid[4], 60);
+	}
+	if(localStorage['level_4'] == 1) {
+		img_unlock4.src = "img/unlock4.jpg";
+	}
+	else {
+		img_unlock4.src = "img/lock4.jpg";
+	}	
+	img_unlock5.onload = function () {
+		ctx.drawImage(img_unlock5, img_pos_wid[5], 160);
+	}
+	if(localStorage['level_5'] == 1) {
+		img_unlock5.src = "img/unlock5.jpg";
+	}
+	else {
+		img_unlock5.src = "img/lock5.jpg";
+	}
+	img_unlock6.onload = function () {
+		ctx.drawImage(img_unlock6, img_pos_wid[6], 160);
+	}
+	if(localStorage['level_6'] == 1) {
+		img_unlock6.src = "img/unlock6.jpg";
+	}
+	else {
+		img_unlock6.src = "img/lock6.jpg";
+	}
+	img_unlock7.onload = function () {
+		ctx.drawImage(img_unlock7, img_pos_wid[7], 160);
+	}
+	if(localStorage['level_7'] == 1) {
+		img_unlock7.src = "img/unlock7.jpg";
+	}
+	else {
+		img_unlock7.src = "img/lock7.jpg";
+	}
+	img_unlock8.onload = function () {
+		ctx.drawImage(img_unlock8, img_pos_wid[8], 160);
+	}
+	if(localStorage['level_8'] == 1) {
+		img_unlock8.src = "img/unlock8.jpg";
+	}
+	else {
+		img_unlock8.src = "img/lock8.jpg";
+	}
+}
+function CheckLevel(level) {
+	var flag = 1;
+	for(var i=1;i<level;i++) {
+		if(localStorage['level_'+i] ==0) {
+			flag = 0;
+			return flag;
+		}
+	}
+	return flag;
+}
+function LevelClick(event) {
+	if(event.touches[0].pageX>=level1['x']&&event.touches[0].pageX<=(level1['x']+level1['width'])&&event.touches[0].pageY>=level1['y']&&event.touches[0].pageY<=(level1['y']+level1['height']))
+	{
+		canvas.removeEventListener('touchstart',LevelClick, false);
+		game['level'] = 1;
+		play(game['level']);
+		TopMenu();
+	}
+	else if(event.touches[0].pageX>=level2['x']&&event.touches[0].pageX<=(level2['x']+level2['width'])&&event.touches[0].pageY>=level2['y']&&event.touches[0].pageY<=(level2['y']+level2['height']))
+	{
+		game['level'] = 2;
+		if(CheckLevel(game['level'])) 
+		{
+			canvas.removeEventListener('touchstart',LevelClick, false);			
+			play(game['level']);
+			TopMenu();
+		}		
+	}
+	else if(event.touches[0].pageX>=level3['x']&&event.touches[0].pageX<=(level3['x']+level3['width'])&&event.touches[0].pageY>=level3['y']&&event.touches[0].pageY<=(level3['y']+level3['height']))
+	{
+		game['level'] = 3;
+		if(CheckLevel(game['level'])) 
+		{
+			canvas.removeEventListener('touchstart',LevelClick, false);			
+			play(game['level']);
+			TopMenu();
+		}
+	}
+	else if(event.touches[0].pageX>=level4['x']&&event.touches[0].pageX<=(level4['x']+level4['width'])&&event.touches[0].pageY>=level4['y']&&event.touches[0].pageY<=(level4['y']+level4['height']))
+	{
+		game['level'] = 4;
+		if(CheckLevel(game['level'])) 
+		{
+			canvas.removeEventListener('touchstart',LevelClick, false);			
+			play(game['level']);
+			TopMenu();
+		}
+	}
+	else if(event.touches[0].pageX>=level5['x']&&event.touches[0].pageX<=(level5['x']+level5['width'])&&event.touches[0].pageY>=level5['y']&&event.touches[0].pageY<=(level5['y']+level5['height']))
+	{
+		game['level'] = 5;
+		if(CheckLevel(game['level'])) 
+		{
+			canvas.removeEventListener('touchstart',LevelClick, false);			
+			play(game['level']);
+			TopMenu();
+		}
+	}
+	else if(event.touches[0].pageX>=level6['x']&&event.touches[0].pageX<=(level6['x']+level6['width'])&&event.touches[0].pageY>=level6['y']&&event.touches[0].pageY<=(level6['y']+level6['height']))
+	{
+		game['level'] = 6;
+		if(CheckLevel(game['level'])) 
+		{
+			canvas.removeEventListener('touchstart',LevelClick, false);			
+			play(game['level']);
+			TopMenu();
+		}
+	}
+	else if(event.touches[0].pageX>=level7['x']&&event.touches[0].pageX<=(level7['x']+level7['width'])&&event.touches[0].pageY>=level7['y']&&event.touches[0].pageY<=(level7['y']+level7['height']))
+	{
+		game['level'] = 7;
+		if(CheckLevel(game['level'])) 
+		{
+			canvas.removeEventListener('touchstart',LevelClick, false);			
+			play(game['level']);
+			TopMenu();
+		}
+	}
+	else if(event.touches[0].pageX>=level8['x']&&event.touches[0].pageX<=(level8['x']+level8['width'])&&event.touches[0].pageY>=level8['y']&&event.touches[0].pageY<=(level8['y']+level8['height']))
+	{
+		game['level'] = 8;
+		if(CheckLevel(game['level'])) 
+		{
+			canvas.removeEventListener('touchstart',LevelClick, false);			
+			play(game['level']);
+			TopMenu();
+		}
+	}
+}
+function MenuClick(event)
+{
+	if(event.touches[0].pageX>=playBtn['x']&&event.touches[0].pageX<=(playBtn['x']+playBtn['width'])&&event.touches[0].pageY>=playBtn['y']&&event.touches[0].pageY<=(playBtn['y']+playBtn['height']))
+	{
+		//alert('MenuClick');
+		//play(game['level']);
+		//TopMenu();
+		SelectLevel();
+		//LevelDown()
+		//LevelUp()
+	}
+	else if(event.touches[0].pageX>=helpBtn['x']&&event.touches[0].pageX<=(helpBtn['x']+helpBtn['width'])&&event.touches[0].pageY>=helpBtn['y']&&event.touches[0].pageY<=(helpBtn['y']+helpBtn['height']))
+	{
+		//alert(222);
+		//play(game['level']);
+		header();
+		MenuOnly();
+		//TopMenu();
+		help();
+	}
+	else if(event.touches[0].pageX>=200&&event.touches[0].pageX<=(200+110)&&event.touches[0].pageY>=200&&event.touches[0].pageY<=(200+40))
+	{
+		//alert(222);
+		//play(game['level']);
+	}
+}
+function HeaderMenuClick(event)
+{
+	if(event.touches[0].pageX>=menuBtn['x']&&event.touches[0].pageX<=(menuBtn['x']+menuBtn['width'])&&event.touches[0].pageY>=menuBtn['y']&&event.touches[0].pageY<=(menuBtn['y']+menuBtn['height']))
+	{
+		//alert(3333333333)
+		//ResetGameSession();
+		menu();
+	}	
+}
+function PauseMenuClick(event)
+{
+	if(event.touches[0].pageX>=pauseBtn['x']&&event.touches[0].pageX<=(pauseBtn['x']+pauseBtn['width'])&&event.touches[0].pageY>=pauseBtn['y']&&event.touches[0].pageY<=(pauseBtn['y']+pauseBtn['height']))
+	{
+		var img_play_btn = new Image();		
+		img_play_btn.onload = function () {
+			ctx.drawImage(img_play_btn, pauseBtn['x'], pauseBtn['y']);
+		}
+		if(pause == 0)
+		{
+		    pause = 1;
+			img_play_btn.src = "play-btn.jpg";			
+		}
+		else
+		{
+			pause = 0;
+			img_play_btn.src = "pause.jpg";
+		}
+		
+	}
+}
+function ResetGameSession()
+{
+	game['level']=1;
+	pause = 0;
+	current_score=0;
+	clearInterval(UpdateTimeID);
+	clearInterval(gameTimeID);
+	canvas.removeEventListener('touchstart',MenuClick, false);
+	canvas.removeEventListener('touchstart',PauseMenuClick, false);
+	canvas.removeEventListener('touchstart',MouseClick, false);
+	canvas.removeEventListener('touchstart',Game_MenuClick_LevelUP, false);
+	canvas.removeEventListener('touchstart',Game_MenuClick_LevelDOWN, false);
+	canvas.removeEventListener('touchstart',HeaderMenuClick, false);	
+}
+function Game_MenuClick_LevelUP(event)
+{
+	//alert('Game_MenuClick_LevelUP')
+	if(event.touches[0].pageX>=continueBtn['x']&&event.touches[0].pageX<=(continueBtn['x']+continueBtn['width'])&&event.touches[0].pageY>=continueBtn['y']&&event.touches[0].pageY<=(continueBtn['y']+continueBtn['height']))
+	{
+		game['level']++;
+		canvas.removeEventListener('touchstart',Game_MenuClick_LevelUP, false);		
+		play(game['level']);
+		TopMenu();
+		//LevelUp()
+	}
+	else if(event.touches[0].pageX>=restartBtn['x']&&event.touches[0].pageX<=(restartBtn['x']+restartBtn['width'])&&event.touches[0].pageY>=restartBtn['y']&&event.touches[0].pageY<=(restartBtn['y']+restartBtn['height']))
+	{
+		//alert('res');
+		//alert(game['level'])
+		game['points'] = game['points'] - (lastIndex*10+timepoints);
+		canvas.removeEventListener('touchstart',Game_MenuClick_LevelUP, false);		
+		play(game['level']);
+		TopMenu();
+	}
+	
+}
+function Game_MenuClick_LevelDOWN(event)
+{
+	if(event.touches[0].pageX>=restartBtn['x']&&event.touches[0].pageX<=(restartBtn['x']+restartBtn['width'])&&event.touches[0].pageY>=restartBtn['y']&&event.touches[0].pageY<=(restartBtn['y']+restartBtn['height']))
+	{
+	    game['points'] = game['points'] - (lastIndex*10+timepoints);
+		canvas.removeEventListener('touchstart',Game_MenuClick_LevelDOWN, false);		
+		play(game['level']);
+		TopMenu();
+	}
+}
+function init(level,num,null_index)
+{
+	//alert(screen.width)
+	//game['null_index']=null_index;
+	//num=GetArrayStage1();
+	numbers=shuffleArray(num);
+	startXPos=w/5;
+	startYPos=1;
+	header();
+	canvas.addEventListener('touchstart',MouseClick, false);
+	k=0;
+	mouseclick_event=0;
+	for(var i=1;i<=game['square_count'];i++)
+	{
+		matrix_num[i] = new Array(20);
+		for(var j=1;j<=game['square_count'];j++)
+		{
+			startX=startXPos+(j-1)*game['squareX'];
+			startY=startYPos+(i-1)*game['squareY'];
+			ctx.beginPath();
+			ctx.rect(startX, startY, game['squareX'], game['squareY']);
+			if(numbers[k]!=0)
+			ctx.fillStyle = '#0f8a16';
+			else
+			ctx.fillStyle = '#fff';
+			ctx.fill();
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = 'black';
+			ctx.stroke();
+			ctx.fillStyle = '#fff';
+			ctx.font = 'italic bold 30px sans-serif';
+			ctx.textBaseline = 'top';
+			centerX = game['squareX']/2.5;
+			centerY = game['squareY']/4;
+			if(numbers[k]/10 >= 1)
+			{
+				centerX = game['squareX']/3;
+				centerY = game['squareY']/4;
+			}
+			if(numbers[k]!=0)
+			ctx.fillText(numbers[k], (startX+centerX), (startY+centerY));
+			matrix_num[i][j]=numbers[k];
+			k=k+1;			
+		}
+	}
+	
+	
+	//alert(matrix_num)
+    
+}
+/*//alert(Math.ceil(1.1));
+var myArray = new Array([1,2],[2,3]);
+
+//alert(myArray[1][0])
+var arrayd = new Array(5);
+var XYpoint= new Array(5);
+var k=1;
+var IndexX,IndexY;
+for(var i=1;i<=4;i++)
+{
+	arrayd[i] = new Array(5);
+	XYpoint= new Array(5);
+	for(var j=1;j<=4;j++)
+	{
+		//X=50
+		arrayd[i][j]=k++;
+	}
+}*/
+function play(level)
+{
+	switch (level)
+	{
+		case 1:
+				game['time']=120;
+				game['null_index']=4;
+				canvas.removeEventListener('touchstart',MenuClick, false);
+				num=GetArrayStage1();
+				init(level,num,game['null_index']);
+				UpdateTimeID=setInterval('UpdateTime()',10);
+				gameTimeID=setInterval('gameTime()',1000);
+		  //setInterval('UpdateTime()',3000);
+		  break;
+		case 2:
+				game['time']=160;
+		  		game['null_index']=3;
+				canvas.removeEventListener('touchstart',MenuClick, false);
+				num=GetArrayStage2();
+				init(level,num,game['null_index']);
+				UpdateTimeID=setInterval('UpdateTime()',10);
+				gameTimeID=setInterval('gameTime()',1000);
+		  break;
+		case 3:
+		  		game['time']=120;
+		  		game['null_index']=3;
+				canvas.removeEventListener('touchstart',MenuClick, false);
+				num=GetArrayStage2();
+				init(level,num,game['null_index']);
+				UpdateTimeID=setInterval('UpdateTime()',10);
+				gameTimeID=setInterval('gameTime()',1000);
+		  break;
+		case 4:
+		  		game['time']=80;
+		  		game['null_index']=3;
+				canvas.removeEventListener('touchstart',MenuClick, false);
+				num=GetArrayStage2();
+				init(level,num,game['null_index']);
+				UpdateTimeID=setInterval('UpdateTime()',10);
+				gameTimeID=setInterval('gameTime()',1000);
+		  break;
+		case 5:
+		  		game['time']=360;
+		  		game['null_index']=2;
+				canvas.removeEventListener('touchstart',MenuClick, false);
+				num=GetArrayStage5();
+				init(level,num,game['null_index']);
+				UpdateTimeID=setInterval('UpdateTime()',10);
+				gameTimeID=setInterval('gameTime()',1000);
+		  break;
+		case 6:
+		  		game['time']=240;
+		  		game['null_index']=2;
+				canvas.removeEventListener('touchstart',MenuClick, false);
+				num=GetArrayStage5();
+				init(level,num,game['null_index']);
+				UpdateTimeID=setInterval('UpdateTime()',10);
+				gameTimeID=setInterval('gameTime()',1000);
+		  break;
+	  	case 7:
+				game['time']=180;
+				game['null_index']=2;
+				canvas.removeEventListener('touchstart',MenuClick, false);
+				num=GetArrayStage5();
+				init(level,num,game['null_index']);
+				UpdateTimeID=setInterval('UpdateTime()',10);
+				gameTimeID=setInterval('gameTime()',1000);
+	  	  break;
+		case 8:
+				game['time']=600;
+				game['null_index']=1;
+				canvas.removeEventListener('touchstart',MenuClick, false);
+				num=GetArrayStage8();
+				init(level,num,game['null_index']);
+				UpdateTimeID=setInterval('UpdateTime()',10);
+				gameTimeID=setInterval('gameTime()',1000);
+	  	  break;  
+	} 
+}
+function MouseClick(event)
+{
+	if(pause == 0)
+	{
+		var currentX=event.touches[0].pageX;
+		var currentY=event.touches[0].pageY;
+		var rectX,rectY;
+		var temp;
+		//mouseclick_event=1;
+		//alert(caught_matrix['x'])
+		GetIndex(currentX,currentY);
+		//alert("X="+IndexY+"  Y="+IndexX)
+		rectX=startXPos+(IndexX-1)*game['squareX'];
+		rectY=startYPos+(IndexY-1)*game['squareY'];
+		//alert(matrix_num[0][1])	
+		if(currentX>=startXPos&&currentX<=(startXPos+(game['squareX']*game['square_count']))&&currentY>=startYPos&&currentY<=(startYPos+(game['squareY']*game['square_count'])))
+		{ // 50*4
+			if(mouseclick_event==0 && matrix_num[IndexY][IndexX]!=0)
+			{		
+				if(matrix_num[IndexY-1][IndexX]=='0' ||	matrix_num[IndexY][IndexX-1]=='0' || matrix_num[IndexY+1][IndexX]=='0' || matrix_num[IndexY][IndexX+1]=='0')
+				{
+					//alert(matrix_num[IndexY][IndexX])
+					//rectX=startXPos+(IndexX-1)*50;
+					//rectY=startYPos+(IndexY-1)*50;					
+					ctx.beginPath();
+					ctx.fillStyle = 'red';
+					ctx.fillRect(rectX, rectY, game['squareX'], game['squareY']);
+					ctx.fill();
+					ctx.fillStyle = '#fff';
+					ctx.font = 'italic bold 30px sans-serif';
+					ctx.textBaseline = 'top';
+					centerX = game['squareX']/2.5;
+					centerY = game['squareY']/4;
+					if(matrix_num[IndexY][IndexX]/10 >= 1)
+					{
+						centerX = game['squareX']/3;
+						centerY = game['squareY']/4;
+					}
+					ctx.fillText(matrix_num[IndexY][IndexX], rectX+centerX, rectY+centerY)
+					/*ctx.fillStyle = '#fff';
+					ctx.font = 'italic bold 30px sans-serif';
+					ctx.textBaseline = 'top';
+					ctx.fillText(matrix_num[IndexY][IndexX], rectX, rectY);*/
+					mouseclick_event=1;
+					caught_matrix['x']=rectX;
+					caught_matrix['y']=rectY;
+					caught_matrix['num']=matrix_num[IndexY][IndexX];
+					caught_matrix['indexX']=IndexX;
+					caught_matrix['indexY']=IndexY;
+					
+				}
+			}
+			else if(mouseclick_event==1)
+			{		
+				if(matrix_num[IndexY][IndexX]==0 &&
+						(matrix_num[IndexY-1][IndexX]==caught_matrix['num'] ||
+						matrix_num[IndexY][IndexX-1]==caught_matrix['num'] ||	
+						matrix_num[IndexY+1][IndexX]==caught_matrix['num'] ||
+						matrix_num[IndexY][IndexX+1]==caught_matrix['num'])			  
+					)
+				{			
+					//alert(0)
+					//ctx.Clearrect(IndexX, IndexY, 50, 50);					
+					ctx.beginPath();
+					//ctx.fillText(caught_matrix['num'], rectX, rectY);
+					ctx.rect(caught_matrix['x'], caught_matrix['y'], game['squareX'], game['squareY']);
+					ctx.fillStyle = 'fff';
+					ctx.fill();
+					ctx.lineWidth = 2;
+					ctx.strokeStyle = 'black';
+					ctx.stroke();
+					
+					
+					ctx.beginPath();
+					ctx.fillStyle = '#0f8a16';
+					ctx.rect(rectX, rectY, game['squareX'], game['squareY']);
+					ctx.fill();
+					ctx.fillStyle = '#fff';
+					ctx.font = 'italic bold 30px sans-serif';
+					ctx.textBaseline = 'top';
+					centerX = game['squareX']/2.5;
+					centerY = game['squareY']/4;
+					if(caught_matrix['num']/10 >= 1)
+					{
+						centerX = game['squareX']/3;
+						centerY = game['squareY']/4;
+					}
+					ctx.fillText(caught_matrix['num'], rectX+centerX, rectY+centerY);
+					ctx.lineWidth = 2;
+					ctx.strokeStyle = 'black';
+					ctx.stroke();
+					
+					//ctx.fillStyle = '#gray';
+					
+					
+					mouseclick_event=0;
+					matrix_num[caught_matrix['indexY']][caught_matrix['indexX']]=0;
+					matrix_num[IndexY][IndexX]=caught_matrix['num'];
+					//ctx.fillText(matrix_num[IndexY][IndexX], caught_matrix['x'], caught_matrix['y']);
+					
+				}
+				else
+				{			
+					mouseclick_event=0;
+					//ctx.beginPath();
+					ctx.rect(caught_matrix['x'], caught_matrix['y'], game['squareX'], game['squareY']);
+					ctx.fillStyle = '#0f8a16';
+					ctx.fill();
+					ctx.lineWidth = 2;
+					ctx.strokeStyle = 'black';
+					ctx.stroke();
+					ctx.fillStyle = '#fff';
+					ctx.font = 'italic bold 30px sans-serif';
+					ctx.textBaseline = 'top';
+					centerX = game['squareX']/2.5;
+					centerY = game['squareY']/4;
+					if(caught_matrix['num']/10 >=1)
+					{
+						centerX = game['squareX']/3;
+						centerY = game['squareY']/4;
+					}
+					ctx.fillText(caught_matrix['num'], caught_matrix['x']+centerX, caught_matrix['y']+centerY);
+					
+				}
+			}
+		}
+		
+		
+		/*ctx.beginPath();
+		  ctx.arc(rectX, rectY, 25, 0, 20, false);
+		  ctx.fillStyle = 'green';
+		  ctx.fill();*/
+		//ctx.Clearrect((IndexX-1)*50, (IndexY-1)*50, 20, 20);
+		//alert(IndexX)
+		//alert(IndexY)
+	}
+}
+function success() {
+            // ignore
+}
+function error_error(e) {
+	alert('great error');
+	alert(e.message);
+}
+function GetIndex(currentX,currentY)
+{
+	IndexX=Math.ceil(Math.abs(startXPos-currentX)/game['squareX']);
+	IndexY=Math.ceil(Math.abs(startYPos-currentY)/game['squareY']);
+	
+	
+}
+function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    return array;
+}
+function gameTime()
+{
+    if(pause == 0)
+	{
+	    game['time']=game['time']-1;
+	}
+}
+function UpdateTime()
+{
+    if(pause == 0)
+	{
+		//alert(matrix_num.toString());		
+		//ctx.beginPath();
+		/*
+		ctx.beginPath();
+		ctx.fillStyle = 'black';
+		ctx.fillRect(clockDis['x'], clockDis['y'], clockDis['x'], 300);
+		ctx.fill();
+		ctx.fillStyle = '#fff';
+		ctx.font = 'italic bold 22px sans-serif';
+		ctx.textBaseline = 'top';
+		ctx.fillText("Time : "+game['time'], clockDis['x'], clockDis['y']);
+		ctx.fillText("Score : "+current_score, pointsDis['x'], pointsDis['y']);
+		ctx.fillText("Total : "+game['points'], pointsDis['x'], pointsDis['y']+50);
+		ctx.font = 'italic bold 20px sans-serif';
+		//ctx.fillText("Level - "+game['level'],level['x'], level['y']);
+		ctx.fillText("Level - "+game['level'], pointsDis['x'], pointsDis['y']+100);
+		*/
+		var minutes = Math.floor(game['time'] / 60);
+		var seconds = game['time'] % 60;
+		mod = '';
+		if((seconds/10)<1){
+			mod = 0;
+		}
+
+		ctx.beginPath();
+		ctx.fillStyle = 'black';
+		ctx.fillRect(clockDis['x']+12, clockDis['y'], clockDis['width']-12, clockDis['height']);
+		ctx.fill();
+		ctx.fillStyle = '#fff';
+		ctx.font = 'italic bold 12px sans-serif';
+		ctx.textBaseline = 'top';		
+		ctx.fillText(minutes+":"+mod+seconds, clockDis['x']+15, clockDis['y']);
+		var flag=0;
+		var s=0;
+		for(var i=1;i<=game['square_count'];i++)
+		{
+			for(var j=1;j<=game['square_count'];j++)
+			{
+				//alert(matrix_num[i][j])
+				if(matrix_num[i][j]!=s+1 && (s+1)<=((game['square_count']*game['square_count'])-game['null_index']))
+				{
+					flag=1;
+					//return 0;
+					break;
+				}
+				//alert(game['null_index']);
+				//alert('matnum ['+i+']['+j+']=s='+s+'='+matrix_num[i][j]);
+				s=s+1;
+							
+			}
+			if(flag==1)
+			{
+				break;
+			}
+			
+		}				
+		//alert(game['time']);
+		if(flag==0)
+		{
+			current_score = (s-game['null_index'])*10;
+			lastIndex = (s-game['null_index']);			
+			//game['level']=game['level']+1;
+			//game['points']=game['points']+current_score+(game['time']*game['level']);
+			game['points']=current_score+(game['time']*game['level']);
+			timepoints = game['time']*game['level'];
+			if(game['points'] > localStorage.highestscore)
+			{
+				localStorage.highestscore = game['points'];
+			}
+			localStorage['level_'+game['level']] = 1;
+			if(game['time'] > localStorage['level_'+game['level']+'time']) {
+				localStorage['level_'+game['level']+'time'] = game['time'];
+			}					
+			if(game['points']>localStorage['level_'+game['level']+'score']) {
+				localStorage['level_'+game['level']+'score'] = game['points'];
+			}
+						
+			//play(game['level']);
+			//game['time']=0;
+			clearInterval(UpdateTimeID);
+			clearInterval(gameTimeID);
+			canvas.removeEventListener('touchstart',MouseClick, false);
+			LevelUp();
+			//alert('completed');
+		}
+		else if(flag==1 && game['time']==0)
+		{
+			current_score = s*10;
+			lastIndex = s;
+		    game['points'] = current_score;
+			timepoints = 0;
+			clearInterval(UpdateTimeID);
+			clearInterval(gameTimeID);
+			canvas.removeEventListener('touchstart',MouseClick, false);
+			LevelDown();
+		}
+	}
+}
+function GetArrayStage1()
+{
+	numbers=['0','1','2','3','4','5','6','7','8','9','10','11','12','0','0','0'];
+	return numbers;
+}
+function GetArrayStage2()
+{
+	numbers=['0','1','2','3','4','5','6','7','8','9','10','11','12','13','0','0'];
+	return numbers;
+}
+function GetArrayStage5()
+{
+	numbers=['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','0'];
+	return numbers;
+}
+function GetArrayStage8()
+{
+	numbers=['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'];
+	return numbers;
+}
+function LevelUp()
+{
+	canvas.removeEventListener('touchstart',PauseMenuClick, false);
+	header();
+	//TopMenu();
+	MenuOnly();
+	//alert(game['level'])	
+	//ctx.drawImage(refreshgame,200,200,31,32);
+	if(game['level'] < 8) 
+	{
+		ctx.beginPath();
+		ctx.fillStyle = '#fff';
+		ctx.font = 'italic bold 12px sans-serif';
+		ctx.textBaseline = 'top';
+		//ctx.fillText("Level - "+game['level']+" Completed",restartBtn['x'], restartBtn['y']-80);
+		//ctx.fillText("Your Score : "+localStorage['level_'+game['level']+'score'], restartBtn['x'], restartBtn['y']-40);
+		ctx.fillText("Level - "+game['level']+" Completed",score_tab['x']+25, score_tab['y']-30);
+		var img_rs = new Image();
+		img_rs.onload = function () {
+			ctx.drawImage(img_rs, restartBtn['x'], restartBtn['y']);
+		}
+		img_rs.src = "restart.jpg";
+		var img_next = new Image();
+		img_next.onload = function () {
+			ctx.drawImage(img_next, continueBtn['x'], continueBtn['y']);
+		}
+		img_next.src = "next.jpg";
+		ctx.beginPath();
+		ctx.rect(score_tab['x'], score_tab['y'], score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y'], score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x'], score_tab['y']+score_tab['height'], score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y']+score_tab['height'], score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x'], score_tab['y']+(score_tab['height']*2), score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y']+(score_tab['height']*2), score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x'], score_tab['y']+(score_tab['height']*3), score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y']+(score_tab['height']*3), score_tab['width'], score_tab['height']);
+		ctx.fillStyle = "green";
+		ctx.fill();
+		ctx.lineWidth = 2;
+		ctx.strokeStyle = '#fff';
+		ctx.stroke();
+		ctx.fillStyle = '#fff';
+		ctx.font = 'italic bold 12px sans-serif';
+		//ctx.textAlign = 'center';
+		//alert(menuBtn['y'])
+		ctx.fillText("Numbers", score_tab['x']+5,score_tab['y']+4); 
+		ctx.fillText("["+lastIndex+"x"+"10"+"]  +", score_tab['x']+score_tab['width']+15, score_tab['y']+4);
+		ctx.fillText("Seconds", score_tab['x']+5,score_tab['y']+score_tab['height']+4);
+		ctx.fillText(game['time']+"  x",score_tab['x']+score_tab['width']+15, score_tab['y']+score_tab['height']+4);
+		ctx.fillText("Level", score_tab['x']+5, score_tab['y']+(score_tab['height']*2)+4);
+		ctx.fillText("["+game['level']+"]", score_tab['x']+score_tab['width']+15, score_tab['y']+(score_tab['height']*2)+4);
+		ctx.fillText("Total", score_tab['x']+5, score_tab['y']+(score_tab['height']*3)+4);
+		ctx.fillText(game['points'], score_tab['x']+score_tab['width']+15, score_tab['y']+(score_tab['height']*3)+4);
+		/*
+		img_next.src = "restart.jpg";			
+		ctx.rect(continueBtn['x'], continueBtn['y'], continueBtn['width'], continueBtn['height']);
+		ctx.rect(restartBtn['x'], restartBtn['y'], restartBtn['width'], restartBtn['height']);
+		ctx.fillStyle = "green";
+		ctx.fill();
+		ctx.lineWidth = 2;
+		ctx.strokeStyle = '#fff';
+		ctx.stroke();
+		ctx.fillStyle = '#fff';
+		ctx.font = 'italic bold 20px sans-serif';
+		ctx.textBaseline = 'top';
+		ctx.fillText("Next Level",continueBtn['x']+2, continueBtn['y']+4);
+		ctx.fillText("Restart",restartBtn['x']+8, restartBtn['y']+4);
+		*/
+	}
+	else
+	{
+		ctx.beginPath();
+		ctx.fillStyle = '#fff';
+	    ctx.font = 'italic bold 12px sans-serif';
+	    ctx.textBaseline = 'top';
+	    //ctx.fillText("Congratulations!",restartBtn['x'], restartBtn['y']-80);
+		ctx.fillText("Level - "+game['level']+" Completed",score_tab['x']+25, score_tab['y']-30);
+		//ctx.fillText("You won the game : "+game['points'], restartBtn['x'], restartBtn['y']-40);
+		var img_rs = new Image();
+		img_rs.onload = function () {
+			ctx.drawImage(img_rs, restartBtn['x'], restartBtn['y']);
+		}
+		img_rs.src = "restart.jpg";
+		
+		ctx.beginPath();
+		ctx.rect(score_tab['x'], score_tab['y'], score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y'], score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x'], score_tab['y']+score_tab['height'], score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y']+score_tab['height'], score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x'], score_tab['y']+(score_tab['height']*2), score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y']+(score_tab['height']*2), score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x'], score_tab['y']+(score_tab['height']*3), score_tab['width'], score_tab['height']);
+		ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y']+(score_tab['height']*3), score_tab['width'], score_tab['height']);
+		ctx.fillStyle = "green";
+		ctx.fill();
+		ctx.lineWidth = 2;
+		ctx.strokeStyle = '#fff';
+		ctx.stroke();
+		ctx.fillStyle = '#fff';
+		ctx.font = 'italic bold 12px sans-serif';
+		//ctx.textAlign = 'center';
+		//alert(menuBtn['y'])
+		ctx.fillText("Numbers", score_tab['x']+5,score_tab['y']+4); 
+		ctx.fillText("["+lastIndex+"x"+"10"+"]  +", score_tab['x']+score_tab['width']+15, score_tab['y']+4);
+		ctx.fillText("Seconds", score_tab['x']+5,score_tab['y']+score_tab['height']+4);
+		ctx.fillText(game['time']+"  x",score_tab['x']+score_tab['width']+15, score_tab['y']+score_tab['height']+4);
+		ctx.fillText("Level", score_tab['x']+5, score_tab['y']+(score_tab['height']*2)+4);
+		ctx.fillText("["+game['level']+"]", score_tab['x']+score_tab['width']+15, score_tab['y']+(score_tab['height']*2)+4);
+		ctx.fillText("Total", score_tab['x']+5, score_tab['y']+(score_tab['height']*3)+4);
+		ctx.fillText(game['points'], score_tab['x']+score_tab['width']+15, score_tab['y']+(score_tab['height']*3)+4);
+		/*
+		ctx.rect(restartBtn['x'], restartBtn['y'], restartBtn['width'], restartBtn['height']);
+		ctx.fillStyle = "green";
+		ctx.fill();
+		ctx.lineWidth = 2;
+		ctx.strokeStyle = '#fff';
+		ctx.stroke();
+		ctx.fillStyle = '#fff';
+	    ctx.font = 'italic bold 20px sans-serif';
+	    ctx.textBaseline = 'top';
+	    //ctx.fillText("Continue",continueBtn['x']+24, continueBtn['y']+6);
+	    ctx.fillText("Restart",restartBtn['x']+13, restartBtn['y']+4);
+		*/
+	}
+	canvas.addEventListener('touchstart',Game_MenuClick_LevelUP, false);
+	//game['level']=game['level']+1;	
+}
+function LevelDown()
+{
+	canvas.removeEventListener('touchstart',PauseMenuClick, false);
+	header();
+	//TopMenu();
+	MenuOnly();
+	var img_rs = new Image();
+	img_rs.onload = function () {
+		ctx.drawImage(img_rs, restartBtn['x'], restartBtn['y']-20);
+	}
+	img_rs.src = "restart.jpg";	
+	ctx.fillStyle = '#fff';
+	ctx.font = 'italic bold 13px sans-serif';
+	ctx.textBaseline = 'top';
+	ctx.fillText("Level - "+game['level']+" Failed",score_tab['x']+25, score_tab['y']-30);
+	
+	ctx.beginPath();
+	ctx.rect(score_tab['x'], score_tab['y'], score_tab['width'], score_tab['height']);
+	ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y'], score_tab['width'], score_tab['height']);
+	ctx.rect(score_tab['x'], score_tab['y']+score_tab['height'], score_tab['width'], score_tab['height']);
+	ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y']+score_tab['height'], score_tab['width'], score_tab['height']);
+	ctx.rect(score_tab['x'], score_tab['y']+(score_tab['height']*2), score_tab['width'], score_tab['height']);
+	ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y']+(score_tab['height']*2), score_tab['width'], score_tab['height']);
+	ctx.rect(score_tab['x'], score_tab['y']+(score_tab['height']*3), score_tab['width'], score_tab['height']);
+	ctx.rect(score_tab['x']+score_tab['width']+2, score_tab['y']+(score_tab['height']*3), score_tab['width'], score_tab['height']);
+	ctx.fillStyle = "green";
+	ctx.fill();
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = '#fff';
+	ctx.stroke();
+    ctx.fillStyle = '#fff';
+	ctx.font = 'italic bold 12px sans-serif';
+	//ctx.textAlign = 'center';
+	//alert(menuBtn['y'])	
+	ctx.fillText("Numbers", score_tab['x']+5,score_tab['y']+4); 
+	ctx.fillText("["+lastIndex+"x"+"10"+"]  +", score_tab['x']+score_tab['width']+15, score_tab['y']+4);
+	ctx.fillText("Seconds", score_tab['x']+5,score_tab['y']+score_tab['height']+4);
+	ctx.fillText(game['time']+"  x",score_tab['x']+score_tab['width']+15, score_tab['y']+score_tab['height']+4);
+	ctx.fillText("Level", score_tab['x']+5, score_tab['y']+(score_tab['height']*2)+4);
+	ctx.fillText("["+game['level']+"]", score_tab['x']+score_tab['width']+15, score_tab['y']+(score_tab['height']*2)+4);
+	ctx.fillText("Total", score_tab['x']+5, score_tab['y']+(score_tab['height']*3)+4);
+	ctx.fillText(game['points'], score_tab['x']+score_tab['width']+15, score_tab['y']+(score_tab['height']*3)+4);
+	
+	
+	
+	//ctx.drawImage(refreshgame,200,200,31,32);
+	/*
+	ctx.beginPath();
+	//ctx.rect(continueBtn['x'], continueBtn['y'], continueBtn['width'], continueBtn['height']);
+	ctx.rect(restartBtn['x'], restartBtn['y'], restartBtn['width'], restartBtn['height']);
+	ctx.fillStyle = "green";
+	ctx.fill();
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = '#fff';
+	ctx.stroke();
+	ctx.fillStyle = '#fff';
+	ctx.font = 'italic bold 20px sans-serif';
+	ctx.textBaseline = 'top';
+	//ctx.fillText("Continue",continueBtn['x']+24, continueBtn['y']+6);
+	ctx.fillText("Restart",restartBtn['x']+13, restartBtn['y']+4);
+*/	
+	canvas.addEventListener('touchstart',Game_MenuClick_LevelDOWN, false);
+		
+	
+	/*ctx.beginPath();
+	ctx.rect(0, 0, canvas.width, canvas.height);
+	ctx.fillStyle = "rgb(200,0,0)";
+	ctx.fill();
+	ctx.fillStyle = '#000';
+	ctx.font = 'italic bold 30px sans-serif';
+	ctx.textBaseline = 'top';
+	ctx.fillText("Game Over", 200, 200);
+	canvas.addEventListener('touchstart',MenuClick, false);*/
+}
+app.initialize();
+</script>
